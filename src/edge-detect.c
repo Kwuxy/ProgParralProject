@@ -35,7 +35,11 @@ void apply_effect(Image* original, Image* new_i) {
 
 	*new_i = new_image(w, h, original->bmp_header.bit_per_pixel, original->bmp_header.color_planes);
 
-	for (int y = OFFSET; y < h - OFFSET; y++) {
+    /* Set image name */
+    new_i->name = malloc(strlen(original->name));
+    strcpy(new_i->name, original->name);
+
+    for (int y = OFFSET; y < h - OFFSET; y++) {
 		for (int x = OFFSET; x < w - OFFSET; x++) {
 			Color_e c = { .Red = 0, .Green = 0, .Blue = 0};
 
@@ -81,13 +85,14 @@ char areSameImage(Image a, Image b) {
 
 int main(int argc, char** argv) {
 
-	Image img = open_bitmap("img/bmp_tank.bmp");
+	Image img = open_bitmap("../img/bmp_tank.bmp");
 	Image new_i;
 	apply_effect(&img, &new_i);
-	save_bitmap(new_i, "out/test_out.bmp");
+
 	//Compare images to check we don't break algorithm
     Image original = open_bitmap("../original/test_out.bmp");
     printf("Equal ? %s\n", areSameImage(original, new_i) == TRUE ? "True" : "False");
 
-	return 0;
+    save_bitmap(new_i, "../out/");
+    return 0;
 }

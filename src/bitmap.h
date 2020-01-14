@@ -130,6 +130,7 @@ typedef struct Pixel
  */
 typedef struct Image
 {
+    char *name;
     Bmp_header bmp_header; /*!< Header of the bitmap. */
     Pixel **pixel_data;    /*!< Pixel matrix (jagged array). */
     Color *palette;        /*!< Color palette (array). */
@@ -176,7 +177,7 @@ Image open_bitmap(const char *filename);
  * @param filename Name for the output file.
  * @return Zero on success, nonzero on failure.
  */
-int save_bitmap(Image image, const char *filename);
+int save_bitmap(Image image, char *filename);
 
 /*!
  * \brief Return a human readable dump of the image properties.

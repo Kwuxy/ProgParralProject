@@ -478,6 +478,11 @@ Image open_bitmap(const char *filename)
             break;
     }
 
+    /* Set image name */
+    char *last_slash = strrchr(filename, '/');
+    image.name = malloc(sizeof(char) * strlen(last_slash));
+    strcpy(image.name, last_slash + 1);
+
     /* free buffer */
     free(bitmap_buffer);
 
@@ -488,7 +493,7 @@ Image open_bitmap(const char *filename)
 /*!
  * Save a bitmap image.
  */
-int save_bitmap(Image image, const char *filename)
+int save_bitmap(Image image, char *filename)
 {
     FILE *f;
     size_t i, j;
@@ -516,6 +521,13 @@ int save_bitmap(Image image, const char *filename)
             + h->header_size
             + h->color_no * 4
     };
+
+    /* Add filename to directory path */
+    int new_length = strlen(filename) + strlen(image.name);
+    char *tmp_filename = malloc(new_length * sizeof(char));
+    strcpy(tmp_filename, filename);
+    strcat(tmp_filename, image.name);
+    filename = tmp_filename;
 
     /* open output file */
     f = fopen(filename, "wb");
