@@ -163,6 +163,8 @@ void destroy_image(Image *im);
  */
 int copy_image(Image to, Image from);
 
+void open_bitmap_directory(const char *directory_name, Image **images, int *images_size);
+
 /*!
  * \brief Open a bitmap file.
  * @param filename Filename for the image.

@@ -85,14 +85,22 @@ char areSameImage(Image a, Image b) {
 
 int main(int argc, char** argv) {
 
-	Image img = open_bitmap("../img/bmp_tank.bmp");
-	Image new_i;
-	apply_effect(&img, &new_i);
+    char directory_in[30] = "../in/";
+    char directory_out[30] = "../out/";
+    Image *images = malloc(0);
+    int images_size = 0;
+
+    open_bitmap_directory(directory_in, &images, &images_size);
+
+    Image new_i;
+    for(int i = 0; i < images_size; i++) {
+        fprintf(stderr, "%s\n", images[i].name);
+    	apply_effect(&images[i], &new_i);
+        save_bitmap(new_i, directory_out);
+    }
 
 	//Compare images to check we don't break algorithm
-    Image original = open_bitmap("../original/test_out.bmp");
-    printf("Equal ? %s\n", areSameImage(original, new_i) == TRUE ? "True" : "False");
-
-    save_bitmap(new_i, "../out/");
+//    Image original = open_bitmap("../original/test_out.bmp");
+//    printf("Equal ? %s\n", areSameImage(original, new_i) == TRUE ? "True" : "False");
     return 0;
 }

@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <dirent.h>
 
 #include "bitmap.h"
 
@@ -203,6 +204,44 @@ int copy_image(Image to, Image from)
         memcpy(to.pixel_data[i], from.pixel_data[i], min_w * sizeof (Pixel));
 
     return 0;
+}
+
+void addImage(Image **array, int *size, Image element) {
+    Image *arr = *array;
+    (*size)++;
+    Image *new = malloc(sizeof(Image) * *size);
+
+    int i;
+    for(i = 0; i < *size - 1; i++) {
+        new[i] = arr[i];
+    }
+    new[i] = element;
+
+    free(arr);
+    *array = new;
+}
+
+/*!
+ * Open every bitmap files of a directory.
+ */
+void open_bitmap_directory(const char *directory_name, Image **images, int *images_size) {
+    struct dirent *entry;
+    DIR *dir;
+    dir = opendir(directory_name);
+
+    char *path = NULL;
+
+    while((entry = readdir(dir))) {
+        if(strstr(entry->d_name, ".bmp")) {
+            path = malloc(strlen(directory_name) + strlen(entry->d_name));
+            strcpy(path, directory_name);
+            strcat(path, entry->d_name);
+
+            addImage(images, images_size, open_bitmap(path));
+
+            free(path);
+        }
+    }
 }
 
 /*!
