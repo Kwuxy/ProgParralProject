@@ -8,10 +8,13 @@
 #include <unistd.h>
 #include "bitmap.h"
 #include <stdint.h>
+#include <string.h>
 
 #define DIM 3
 #define LENGHT DIM
 #define OFFSET DIM /2
+#define TRUE 1
+#define FALSE 0
 
 const float KERNEL[DIM][DIM] = {{-1, -1,-1},
 							   {-1,8,-1},
@@ -57,11 +60,34 @@ void apply_effect(Image* original, Image* new_i) {
 	}
 }
 
+char areSameImage(Image a, Image b) {
+    if(a.bmp_header.width != b.bmp_header.width || a.bmp_header.height != b.bmp_header.height) {
+        return FALSE;
+    }
+
+    for (int height = 0; height < a.bmp_header.height; ++height) {
+        for (int width = 0; width < a.bmp_header.width; ++width) {
+            Pixel pa = a.pixel_data[height][width];
+            Pixel pb = b.pixel_data[height][width];
+
+            if(pa.b != pb.b || pa.g != pb.g || pa.i != pb.i || pa.r != pb.r) {
+                return FALSE;
+            }
+        }
+    }
+
+    return TRUE;
+}
+
 int main(int argc, char** argv) {
 
 	Image img = open_bitmap("img/bmp_tank.bmp");
 	Image new_i;
 	apply_effect(&img, &new_i);
 	save_bitmap(new_i, "out/test_out.bmp");
+	//Compare images to check we don't break algorithm
+    Image original = open_bitmap("../original/test_out.bmp");
+    printf("Equal ? %s\n", areSameImage(original, new_i) == TRUE ? "True" : "False");
+
 	return 0;
 }
