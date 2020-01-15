@@ -785,6 +785,10 @@ Working_Image pop(Stack *stack) {
     return stack->data[stack->count];
 }
 
+Working_Image peek(Stack *stack) {
+    return stack->data[stack->count - 1];
+}
+
 /*!
  * Return a string containing a human readable dump of the image properties.
  */

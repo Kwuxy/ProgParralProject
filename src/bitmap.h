@@ -205,6 +205,8 @@ void push(Stack *stack, Working_Image image);
 
 Working_Image pop(Stack *stack);
 
+Working_Image peek(Stack *stack);
+
 /*!
  * \brief Return a human readable dump of the image properties.
  * @param image Bitmap image.
