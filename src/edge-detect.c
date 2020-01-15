@@ -86,16 +86,16 @@ char areSameImage(Image a, Image b) {
 int main(int argc, char** argv) {
     char directory_in[30] = "../in/";
     char directory_out[30] = "../out/";
-    Image *images = malloc(0);
-    int images_size = 0;
     time_t begin = clock();
 
-    open_bitmap_directory(directory_in, &images, &images_size);
+    Stack *images = open_bitmap_directory(directory_in);
 
     Image new_i;
-    for(int i = 0; i < images_size; i++) {
-        fprintf(stderr, "%s\n", images[i].name);
-    	apply_effect(&images[i], &new_i);
+    int images_to_treat = images->count;
+    for(int i = 0; i < images_to_treat; i++) {
+        Image image = pop(images);
+        fprintf(stderr, "%s\n", image.name);
+    	apply_effect(&image, &new_i);
         save_bitmap(new_i, directory_out);
     }
     printf("Time to process directory : %.4lf secs", ((double)(clock() - begin)) / CLOCKS_PER_SEC );

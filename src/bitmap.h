@@ -26,6 +26,7 @@
 #define __BITMAP_INCLUDED 
 
 #include <stdint.h>
+#include <pthread.h>
 
 /* Indices for RGB channels */
 #define B 0 /*!< Blue channel index. */
@@ -136,6 +137,15 @@ typedef struct Image
     Color *palette;        /*!< Color palette (array). */
 } Image;
 
+typedef struct {
+    Image *data;
+    int count;
+    int size;
+    pthread_mutex_t lock;
+    pthread_cond_t can_consume;
+    pthread_cond_t can_produce;
+} Stack;
+
 /*!
  * \brief Allocate resources for a new image object.
  * @param width Image width.
@@ -163,7 +173,7 @@ void destroy_image(Image *im);
  */
 int copy_image(Image to, Image from);
 
-void open_bitmap_directory(const char *directory_name, Image **images, int *images_size);
+Stack * open_bitmap_directory(const char *directory_name);
 
 /*!
  * \brief Open a bitmap file.
@@ -180,6 +190,14 @@ Image open_bitmap(const char *filename);
  * @return Zero on success, nonzero on failure.
  */
 int save_bitmap(Image image, char *filename);
+
+Stack * stack_init(int size);
+
+void stack_free(Stack *stack);
+
+void push(Stack *stack, Image image);
+
+Image pop(Stack *stack);
 
 /*!
  * \brief Return a human readable dump of the image properties.

@@ -78,6 +78,8 @@ const uint8_t mask4[] = {240, 15};
 static __inline__ unsigned int tr_zeros(uint32_t val) 
     __attribute__((always_inline));
 
+int countBmpFilesInDir(const char *name);
+
 /*
  * Count trailing binary zeros.
  */
@@ -224,24 +226,39 @@ void addImage(Image **array, int *size, Image element) {
 /*!
  * Open every bitmap files of a directory.
  */
-void open_bitmap_directory(const char *directory_name, Image **images, int *images_size) {
+Stack * open_bitmap_directory(const char *directory_name) {
     struct dirent *entry;
     DIR *dir;
     dir = opendir(directory_name);
 
     char *path = NULL;
+    Stack *images = stack_init(countBmpFilesInDir(directory_name));
 
     while((entry = readdir(dir))) {
         if(strstr(entry->d_name, ".bmp")) {
             path = malloc(strlen(directory_name) + strlen(entry->d_name));
             strcpy(path, directory_name);
             strcat(path, entry->d_name);
-
-            addImage(images, images_size, open_bitmap(path));
-
+            push(images, open_bitmap(path));
             free(path);
         }
     }
+
+    return images;
+}
+
+int countBmpFilesInDir(const char *name) {
+    int counter = 0;
+    struct dirent *entry;
+    DIR *dir = opendir(name);
+
+    while((entry = readdir(dir))) {
+        if(strstr(entry->d_name, ".bmp")) {
+            counter++;
+        }
+    }
+
+    return counter;
 }
 
 /*!
@@ -734,6 +751,38 @@ int save_bitmap(Image image, char *filename)
     free(bitmap_buffer);
     fclose(f);
     return 0;
+}
+
+Stack *stack_init(int size) {
+    Stack *stack = malloc(sizeof(Stack));
+    pthread_cond_init(&(stack->can_produce), NULL);
+    pthread_cond_init(&(stack->can_consume), NULL);
+    pthread_mutex_init(&(stack->lock), NULL);
+    stack->data = malloc(sizeof(Image) * size);
+    stack->size = size;
+    stack->count = 0;
+
+    return stack;
+}
+
+void stack_free(Stack *stack) {
+    pthread_cond_destroy(&(stack->can_consume));
+    pthread_cond_destroy(&(stack->can_produce));
+    pthread_mutex_destroy(&(stack->lock));
+    free(stack->data);
+    free(stack);
+}
+
+void push(Stack *stack, Image image) {
+    stack->data[stack->count] = image;
+    stack->count++;
+}
+
+Image pop(Stack *stack) {
+    stack->count--;
+    Image image = stack->data[stack->count];
+
+    return image;
 }
 
 /*!
