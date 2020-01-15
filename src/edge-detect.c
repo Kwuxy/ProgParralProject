@@ -9,6 +9,7 @@
 #include "bitmap.h"
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #define DIM 3
 #define LENGHT DIM
@@ -84,11 +85,11 @@ char areSameImage(Image a, Image b) {
 }
 
 int main(int argc, char** argv) {
-
     char directory_in[30] = "../in/";
     char directory_out[30] = "../out/";
     Image *images = malloc(0);
     int images_size = 0;
+    time_t begin = clock();
 
     open_bitmap_directory(directory_in, &images, &images_size);
 
@@ -98,6 +99,7 @@ int main(int argc, char** argv) {
     	apply_effect(&images[i], &new_i);
         save_bitmap(new_i, directory_out);
     }
+    printf("Time to process directory : %.4lf secs", ((double)(clock() - begin)) / CLOCKS_PER_SEC );
 
 	//Compare images to check we don't break algorithm
 //    Image original = open_bitmap("../original/test_out.bmp");
