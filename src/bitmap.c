@@ -789,6 +789,10 @@ Working_Image peek(Stack *stack) {
     return stack->data[stack->count - 1];
 }
 
+bool is_empty(Stack *stack) {
+    return stack->count <= 0;
+}
+
 /*!
  * Return a string containing a human readable dump of the image properties.
  */

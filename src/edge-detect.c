@@ -1,5 +1,5 @@
 /*
-	//gcc src/edge-detect.c src/bitmap.c -O2 -ftree-vectorize -fopt-info -mavx2 -fopt-info-vec-all
+	//gcc src/edge-detect.c src/bitmap.c -O2 -ftree-vectorize -fopt-info -mavx2 -fopt-info-vec-all -pthread
 	//UTILISER UNIQUEMENT DES BMP 24bits
 */
 
@@ -26,6 +26,8 @@ typedef struct Color_t {
 	float Blue;
 } Color_e;
 
+char directory_in[30] = "../in/";
+char directory_out[30] = "../out/";
 
 void apply_effect(Image* original, Image* new_i);
 void apply_effect(Image* original, Image* new_i) {
@@ -83,22 +85,88 @@ char areSameImage(Image a, Image b) {
     return true;
 }
 
+//producer
+void * image_processor(void *arg) {
+    Stack *images = (Stack *) arg;
+
+    while(true) {
+        pthread_mutex_lock(&images->lock);
+        if(is_empty(images) || peek(images).treated) {
+            pthread_cond_signal(&images->can_consume);
+            while(is_empty(images) || peek(images).treated) {
+                if(is_empty(images)) {
+                    pthread_mutex_unlock(&images->lock);
+                    return NULL;
+                }
+                pthread_cond_wait(&images->can_produce, &images->lock);
+            }
+        }
+
+        Working_Image working_image = pop(images);
+        pthread_mutex_unlock(&images->lock);
+
+        Image new_image;
+        printf("Start to treat `%s`\n", working_image.image.name);
+        apply_effect(&working_image.image, &new_image);
+        working_image.image = new_image;
+        working_image.treated = true;
+        printf("Successfully treated `%s`\n", working_image.image.name);
+
+        pthread_mutex_lock(&images->lock);
+        push(images, working_image);
+        pthread_mutex_unlock(&images->lock);
+    }
+}
+
+//consumer
+void * image_saver(void *arg) {
+    Stack *images = (Stack *)arg;
+    int images_remaining = images->size;
+
+    while(images_remaining > 0) {
+        pthread_mutex_lock(&images->lock);
+        while(is_empty(images) || !peek(images).treated) {
+
+            pthread_cond_wait(&images->can_consume, &images->lock);
+        }
+
+        while(!is_empty(images) && peek(images).treated) {
+            Working_Image workingImage = pop(images);
+            save_bitmap(workingImage.image, directory_out);
+            images_remaining--;
+            printf("`%s` saved; %d remaining\n", workingImage.image.name, images_remaining);
+        }
+
+        pthread_cond_broadcast(&images->can_produce);
+        pthread_mutex_unlock(&images->lock);
+    }
+}
+
 int main(int argc, char** argv) {
-    char directory_in[30] = "../in/";
-    char directory_out[30] = "../out/";
     time_t begin = clock();
 
     Stack *images = open_bitmap_directory(directory_in);
+    pthread_t threads_id[5];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-    Image new_i;
-    int images_to_treat = images->count;
-    for(int i = 0; i < images_to_treat; i++) {
-        Image image = pop(images).image;
-        fprintf(stderr, "%s\n", image.name);
-    	apply_effect(&image, &new_i);
-        save_bitmap(new_i, directory_out);
+    for(int i = 0; i < 4; i++) {
+        pthread_create(&threads_id[i], &attr, image_processor, (void *) images);
     }
-    printf("Time to process directory : %.4lf secs", ((double)(clock() - begin)) / CLOCKS_PER_SEC );
+    pthread_create(&threads_id[4], NULL, image_saver, (void *) images);
+    //on attends le consommateur
+    pthread_join(threads_id[4] ,NULL);
+
+//    Image new_i;
+//    int images_to_treat = images->count;
+//    for(int i = 0; i < images_to_treat; i++) {
+//        Image image = pop(images).image;
+//        fprintf(stderr, "%s\n", image.name);
+//        apply_effect(&image, &new_i);
+//        save_bitmap(new_i, directory_out);
+//    }
+    printf("Time to process directory : %.4lf secs\n", ((double)(clock() - begin)) / CLOCKS_PER_SEC );
     stack_free(images);
 
 	//Compare images to check we don't break algorithm
