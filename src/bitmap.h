@@ -27,6 +27,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 /* Indices for RGB channels */
 #define B 0 /*!< Blue channel index. */
@@ -138,7 +139,12 @@ typedef struct Image
 } Image;
 
 typedef struct {
-    Image *data;
+    Image image;
+    bool treated;
+} Working_Image;
+
+typedef struct {
+    Working_Image *data;
     int count;
     int size;
     pthread_mutex_t lock;
@@ -195,9 +201,9 @@ Stack * stack_init(int size);
 
 void stack_free(Stack *stack);
 
-void push(Stack *stack, Image image);
+void push(Stack *stack, Working_Image image);
 
-Image pop(Stack *stack);
+Working_Image pop(Stack *stack);
 
 /*!
  * \brief Return a human readable dump of the image properties.

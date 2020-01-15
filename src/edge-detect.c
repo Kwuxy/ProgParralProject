@@ -93,12 +93,13 @@ int main(int argc, char** argv) {
     Image new_i;
     int images_to_treat = images->count;
     for(int i = 0; i < images_to_treat; i++) {
-        Image image = pop(images);
+        Image image = pop(images).image;
         fprintf(stderr, "%s\n", image.name);
     	apply_effect(&image, &new_i);
         save_bitmap(new_i, directory_out);
     }
     printf("Time to process directory : %.4lf secs", ((double)(clock() - begin)) / CLOCKS_PER_SEC );
+    stack_free(images);
 
 	//Compare images to check we don't break algorithm
 //    Image original = open_bitmap("../original/test_out.bmp");

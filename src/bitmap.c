@@ -239,7 +239,10 @@ Stack * open_bitmap_directory(const char *directory_name) {
             path = malloc(strlen(directory_name) + strlen(entry->d_name));
             strcpy(path, directory_name);
             strcat(path, entry->d_name);
-            push(images, open_bitmap(path));
+            Working_Image new_image;
+            new_image.image = open_bitmap(path);
+            new_image.treated = false;
+            push(images, new_image);
             free(path);
         }
     }
@@ -758,7 +761,7 @@ Stack *stack_init(int size) {
     pthread_cond_init(&(stack->can_produce), NULL);
     pthread_cond_init(&(stack->can_consume), NULL);
     pthread_mutex_init(&(stack->lock), NULL);
-    stack->data = malloc(sizeof(Image) * size);
+    stack->data = malloc(sizeof(Working_Image) * size);
     stack->size = size;
     stack->count = 0;
 
@@ -769,20 +772,17 @@ void stack_free(Stack *stack) {
     pthread_cond_destroy(&(stack->can_consume));
     pthread_cond_destroy(&(stack->can_produce));
     pthread_mutex_destroy(&(stack->lock));
-    free(stack->data);
     free(stack);
 }
 
-void push(Stack *stack, Image image) {
+void push(Stack *stack, Working_Image image) {
     stack->data[stack->count] = image;
     stack->count++;
 }
 
-Image pop(Stack *stack) {
+Working_Image pop(Stack *stack) {
     stack->count--;
-    Image image = stack->data[stack->count];
-
-    return image;
+    return stack->data[stack->count];
 }
 
 /*!
