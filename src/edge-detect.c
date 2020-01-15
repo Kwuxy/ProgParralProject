@@ -10,12 +10,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 
 #define DIM 3
 #define LENGHT DIM
 #define OFFSET DIM /2
-#define TRUE 1
-#define FALSE 0
 
 const float KERNEL[DIM][DIM] = {{-1, -1,-1},
 							   {-1,8,-1},
@@ -67,7 +66,7 @@ void apply_effect(Image* original, Image* new_i) {
 
 char areSameImage(Image a, Image b) {
     if(a.bmp_header.width != b.bmp_header.width || a.bmp_header.height != b.bmp_header.height) {
-        return FALSE;
+        return false;
     }
 
     for (int height = 0; height < a.bmp_header.height; ++height) {
@@ -76,12 +75,12 @@ char areSameImage(Image a, Image b) {
             Pixel pb = b.pixel_data[height][width];
 
             if(pa.b != pb.b || pa.g != pb.g || pa.i != pb.i || pa.r != pb.r) {
-                return FALSE;
+                return false;
             }
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 int main(int argc, char** argv) {
@@ -103,6 +102,6 @@ int main(int argc, char** argv) {
 
 	//Compare images to check we don't break algorithm
 //    Image original = open_bitmap("../original/test_out.bmp");
-//    printf("Equal ? %s\n", areSameImage(original, new_i) == TRUE ? "True" : "False");
+//    printf("Equal ? %s\n", areSameImage(original, new_i) == true ? "true" : "false");
     return 0;
 }
