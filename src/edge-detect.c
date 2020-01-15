@@ -9,7 +9,8 @@
 #include "bitmap.h"
 #include <stdint.h>
 #include <string.h>
-#include <time.h>
+//#include <time.h>
+#include <sys/time.h>
 #include <stdbool.h>
 
 #define DIM 3
@@ -143,9 +144,11 @@ void * image_saver(void *arg) {
 }
 
 int main(int argc, char** argv) {
-    time_t begin = clock();
+    struct timeval begin, end;
+    gettimeofday(&begin, NULL);
 
     Stack *images = open_bitmap_directory(directory_in);
+
     pthread_t threads_id[5];
     pthread_attr_t attr;
     pthread_attr_init(&attr);
@@ -166,7 +169,10 @@ int main(int argc, char** argv) {
 //        apply_effect(&image, &new_i);
 //        save_bitmap(new_i, directory_out);
 //    }
-    printf("Time to process directory : %.4lf secs\n", ((double)(clock() - begin)) / CLOCKS_PER_SEC );
+
+    gettimeofday(&end, NULL);
+    double time_taken = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) * 1e-6;
+    printf("Time to process directory : %.4lf secs\n", time_taken );
     stack_free(images);
 
 	//Compare images to check we don't break algorithm
