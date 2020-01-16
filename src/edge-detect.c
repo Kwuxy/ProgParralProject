@@ -16,10 +16,11 @@
 #define DIM 3
 #define LENGHT DIM
 #define OFFSET DIM /2
+#define NUMBER_OF_MASK 3
+#define EDGE_DETECT {{-1, -1, -1}, {-1, 8,  -1}, {-1, -1, -1}}
+#define SHARPEN {{0, -1, 0}, {-1, 5,  -1}, {0, -1, 0}}
+#define BOX_BLUR {{0.1111, 0.1111, 0.1111}, {0.1111, 0.1111,  0.1111}, {0.1111, 0.1111, 0.1111}}
 
-const float KERNEL[DIM][DIM] = {{-1, -1,-1},
-							   {-1,8,-1},
-							   {-1,-1,-1}};
 
 typedef struct Color_t {
 	float Red;
@@ -27,7 +28,40 @@ typedef struct Color_t {
 	float Blue;
 } Color_e;
 
+typedef struct  mask_t {
+    char *name;
+    float matrix[DIM][DIM];
+}                mask_s;
+
 char *directory_in, *directory_out;
+mask_s selected_mask;
+
+struct mask_t get_mask(const char *const name)
+{
+    const mask_s mask_array[NUMBER_OF_MASK] = {
+            {
+                    .name = "edgedetect",
+                    .matrix = EDGE_DETECT,
+            },
+            {
+                    .name = "sharpen",
+                    .matrix = SHARPEN,
+            },
+            {
+                    .name = "boxblur",
+                    .matrix = BOX_BLUR,
+            }
+    };
+    for (int i = 0; i < NUMBER_OF_MASK; ++i) {
+        if (!strcmp(mask_array[i].name, name)) {
+            printf("%s\n", mask_array[i].name);
+            return mask_array[i];
+        }
+    }
+
+    fprintf(stderr, "Invalid mask, edgedetect selected\n");
+    return mask_array[0];
+}
 
 void apply_effect(Image* original, Image* new_i);
 void apply_effect(Image* original, Image* new_i) {
@@ -52,9 +86,9 @@ void apply_effect(Image* original, Image* new_i) {
 
 					Pixel* p = &original->pixel_data[yn][xn];
 
-					c.Red += ((float) p->r) * KERNEL[a][b];
-					c.Green += ((float) p->g) * KERNEL[a][b];
-					c.Blue += ((float) p->b) * KERNEL[a][b];
+					c.Red += ((float) p->r) * selected_mask.matrix[a][b];
+					c.Green += ((float) p->g) * selected_mask.matrix[a][b];
+					c.Blue += ((float) p->b) * selected_mask.matrix[a][b];
 				}
 			}
 
@@ -178,9 +212,11 @@ int main(int argc, char** argv) {
     int thread_number = atoi(argv[3]);
 
     if (thread_number <= 0 || thread_number > images->size) {
-        fprintf(stderr, "Wrong call. Thread number must be greater than 0 & less than or equal to image number");
+        fprintf(stderr, "Usage: Thread number must be greater than 0 & less than or equal to image number");
         return 1;
     }
+
+    selected_mask = get_mask(argv[4]);
 
     for(int i = 0; i < thread_number; i++) {
         pthread_create(&threads_id[i], &attr, image_processor, (void *) images);
