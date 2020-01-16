@@ -152,6 +152,8 @@ typedef struct {
     pthread_cond_t can_produce;
 } Stack;
 
+int countBmpFilesInDir(const char *name);
+
 /*!
  * \brief Allocate resources for a new image object.
  * @param width Image width.

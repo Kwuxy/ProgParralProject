@@ -78,8 +78,6 @@ const uint8_t mask4[] = {240, 15};
 static __inline__ unsigned int tr_zeros(uint32_t val) 
     __attribute__((always_inline));
 
-int countBmpFilesInDir(const char *name);
-
 /*
  * Count trailing binary zeros.
  */
@@ -206,21 +204,6 @@ int copy_image(Image to, Image from)
         memcpy(to.pixel_data[i], from.pixel_data[i], min_w * sizeof (Pixel));
 
     return 0;
-}
-
-void addImage(Image **array, int *size, Image element) {
-    Image *arr = *array;
-    (*size)++;
-    Image *new = malloc(sizeof(Image) * *size);
-
-    int i;
-    for(i = 0; i < *size - 1; i++) {
-        new[i] = arr[i];
-    }
-    new[i] = element;
-
-    free(arr);
-    *array = new;
 }
 
 /*!

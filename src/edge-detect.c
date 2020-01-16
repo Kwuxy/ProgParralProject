@@ -159,6 +159,10 @@ int main(int argc, char** argv) {
     }
 
     set_directory(argv[1], &directory_in);
+    if(countBmpFilesInDir(directory_in) == 0) {
+        fprintf(stderr, "Directory_in is empty.");
+        exit(1);
+    }
     set_directory(argv[2], &directory_out);
 
     struct timeval begin, end;
