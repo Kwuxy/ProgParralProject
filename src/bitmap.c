@@ -230,6 +230,10 @@ Stack * open_bitmap_directory(const char *directory_name) {
     struct dirent *entry;
     DIR *dir;
     dir = opendir(directory_name);
+    if(dir == NULL) {
+        fprintf(stderr, "Directory `%s` not found\n", directory_name);
+        exit(1);
+    }
 
     char *path = NULL;
     Stack *images = stack_init(countBmpFilesInDir(directory_name));

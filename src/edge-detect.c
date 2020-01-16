@@ -27,8 +27,7 @@ typedef struct Color_t {
 	float Blue;
 } Color_e;
 
-char directory_in[30] = "../in/";
-char directory_out[30] = "../out/";
+char *directory_in, *directory_out;
 
 void apply_effect(Image* original, Image* new_i);
 void apply_effect(Image* original, Image* new_i) {
@@ -143,7 +142,25 @@ void * image_saver(void *arg) {
     }
 }
 
+void set_directory(char *origin, char **target) {
+    *target = malloc(strlen(origin));
+    strcpy(*target, origin);
+}
+
+void free_directory(char *directory) {
+    free(directory);
+}
+
 int main(int argc, char** argv) {
+    if(argc < 5) {
+        fprintf(stderr, "Wrong call. Waiting arguments [in_directory] [out_directory] [thread_number] [algorithm_name]\n");
+        fprintf(stderr, "Example : ./apply-effect \"./in/\" \"./out/\" 3 boxblur");
+        return 1;
+    }
+
+    set_directory(argv[1], &directory_in);
+    set_directory(argv[2], &directory_out);
+
     struct timeval begin, end;
     gettimeofday(&begin, NULL);
 
@@ -161,19 +178,13 @@ int main(int argc, char** argv) {
     //on attends le consommateur
     pthread_join(threads_id[4] ,NULL);
 
-//    Image new_i;
-//    int images_to_treat = images->count;
-//    for(int i = 0; i < images_to_treat; i++) {
-//        Image image = pop(images).image;
-//        fprintf(stderr, "%s\n", image.name);
-//        apply_effect(&image, &new_i);
-//        save_bitmap(new_i, directory_out);
-//    }
-
     gettimeofday(&end, NULL);
     double time_taken = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) * 1e-6;
     printf("Time to process directory : %.4lf secs\n", time_taken );
     stack_free(images);
+
+    free_directory(directory_in);
+    free_directory(directory_out);
 
 	//Compare images to check we don't break algorithm
 //    Image original = open_bitmap("../original/test_out.bmp");
