@@ -175,12 +175,19 @@ int main(int argc, char** argv) {
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-    for(int i = 0; i < 4; i++) {
+    int thread_number = atoi(argv[3]);
+
+    if (thread_number <= 0 || thread_number > images->size) {
+        fprintf(stderr, "Wrong call. Thread number must be greater than 0 & less than or equal to image number");
+        return 1;
+    }
+
+    for(int i = 0; i < thread_number; i++) {
         pthread_create(&threads_id[i], &attr, image_processor, (void *) images);
     }
-    pthread_create(&threads_id[4], NULL, image_saver, (void *) images);
+    pthread_create(&threads_id[thread_number], NULL, image_saver, (void *) images);
     //on attends le consommateur
-    pthread_join(threads_id[4] ,NULL);
+    pthread_join(threads_id[thread_number] ,NULL);
 
     gettimeofday(&end, NULL);
     double time_taken = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec) * 1e-6;
