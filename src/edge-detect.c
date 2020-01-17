@@ -12,6 +12,7 @@
 //#include <time.h>
 #include <sys/time.h>
 #include <stdbool.h>
+#include <dirent.h>
 
 #define DIM 3
 #define LENGHT DIM
@@ -181,6 +182,19 @@ void set_directory(char *origin, char **target) {
     strcpy(*target, origin);
 }
 
+void empty_directory(char *directory) {
+    DIR *folder = opendir(directory);
+    struct dirent *next_file;
+    char filepath[256];
+
+    while ((next_file = readdir(folder)) != NULL )
+    {
+        sprintf(filepath, "%s/%s", directory, next_file->d_name);
+        remove(filepath);
+    }
+    closedir(folder);
+}
+
 void free_directory(char *directory) {
     free(directory);
 }
@@ -198,6 +212,8 @@ int main(int argc, char** argv) {
         exit(1);
     }
     set_directory(argv[2], &directory_out);
+
+    empty_directory(directory_out);
 
     struct timeval begin, end;
     gettimeofday(&begin, NULL);
