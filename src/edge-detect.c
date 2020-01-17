@@ -185,12 +185,14 @@ void set_directory(char *origin, char **target) {
 void empty_directory(char *directory) {
     DIR *folder = opendir(directory);
     struct dirent *next_file;
-    char filepath[256];
+    char filepath[512];
 
     while ((next_file = readdir(folder)) != NULL )
     {
-        sprintf(filepath, "%s/%s", directory, next_file->d_name);
-        remove(filepath);
+        if ((strlen(directory) + strlen(next_file->d_name) + 1) < sizeof(filepath) / sizeof(char)) {
+            sprintf(filepath, "%s/%s", directory, next_file->d_name);
+            remove(filepath);
+        }
     }
     closedir(folder);
 }
