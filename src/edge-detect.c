@@ -55,7 +55,6 @@ struct mask_t get_mask(const char *const name)
     };
     for (int i = 0; i < NUMBER_OF_MASK; ++i) {
         if (!strcmp(mask_array[i].name, name)) {
-            printf("%s\n", mask_array[i].name);
             return mask_array[i];
         }
     }
