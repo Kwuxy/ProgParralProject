@@ -63,41 +63,51 @@ struct mask_t get_mask(const char *const name)
     return mask_array[0];
 }
 
+void apply_convolution(Color_e* restrict c, int a, int b, int x, int y, Image* restrict img) {
+    int xn = x + a - OFFSET;
+    int yn = y + b - OFFSET;
+
+    Pixel* p = &img->pixel_data[yn][xn];
+
+    c->Red += ((float) p->r) * selected_mask.matrix[a][b];
+    c->Green += ((float) p->g) * selected_mask.matrix[a][b];
+    c->Blue += ((float) p->b) * selected_mask.matrix[a][b];
+}
+
 void apply_effect(Image* original, Image* new_i);
 void apply_effect(Image* original, Image* new_i) {
 
-	int w = original->bmp_header.width;
-	int h = original->bmp_header.height;
+    int w = original->bmp_header.width;
+    int h = original->bmp_header.height;
 
-	*new_i = new_image(w, h, original->bmp_header.bit_per_pixel, original->bmp_header.color_planes);
+    *new_i = new_image(w, h, original->bmp_header.bit_per_pixel, original->bmp_header.color_planes);
 
     /* Set image name */
     new_i->name = malloc(strlen(original->name));
     strcpy(new_i->name, original->name);
 
     for (int y = OFFSET; y < h - OFFSET; y++) {
-		for (int x = OFFSET; x < w - OFFSET; x++) {
-			Color_e c = { .Red = 0, .Green = 0, .Blue = 0};
+        for (int x = OFFSET; x < w - OFFSET; x++) {
+            Color_e c = { .Red = 0, .Green = 0, .Blue = 0};
 
-			for(int a = 0; a < LENGHT; a++){
-				for(int b = 0; b < LENGHT; b++){
-					int xn = x + a - OFFSET;
-					int yn = y + b - OFFSET;
+            apply_convolution(&c, 0, 0, x, y, original);
+            apply_convolution(&c, 0, 1, x, y, original);
+            apply_convolution(&c, 0, 2, x, y, original);
 
-					Pixel* p = &original->pixel_data[yn][xn];
+            apply_convolution(&c, 1, 0, x, y, original);
+            apply_convolution(&c, 1, 1, x, y, original);
+            apply_convolution(&c, 1, 2, x, y, original);
 
-					c.Red += ((float) p->r) * selected_mask.matrix[a][b];
-					c.Green += ((float) p->g) * selected_mask.matrix[a][b];
-					c.Blue += ((float) p->b) * selected_mask.matrix[a][b];
-				}
-			}
+            apply_convolution(&c, 2, 0, x, y, original);
+            apply_convolution(&c, 2, 1, x, y, original);
+            apply_convolution(&c, 2, 2, x, y, original);
 
-			Pixel* dest = &new_i->pixel_data[y][x];
-			dest->r = (uint8_t)  (c.Red <= 0 ? 0 : c.Red >= 255 ? 255 : c.Red);
-			dest->g = (uint8_t) (c.Green <= 0 ? 0 : c.Green >= 255 ? 255 : c.Green);
-			dest->b = (uint8_t) (c.Blue <= 0 ? 0 : c.Blue >= 255 ? 255 : c.Blue);
-		}
-	}
+            Pixel* dest = &new_i->pixel_data[y][x];
+            dest->r = (uint8_t)  (c.Red <= 0 ? 0 : c.Red >= 255 ? 255 : c.Red);
+            dest->g = (uint8_t) (c.Green <= 0 ? 0 : c.Green >= 255 ? 255 : c.Green);
+            dest->b = (uint8_t) (c.Blue <= 0 ? 0 : c.Blue >= 255 ? 255 : c.Blue);
+        }
+    }
 }
 
 char areSameImage(Image a, Image b) {
